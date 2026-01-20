@@ -167,7 +167,7 @@ Aggiungi al file `.claude/settings.json` nella home o nel progetto:
 }
 ```
 
-## Tool Disponibili (32 totali)
+## Tool Disponibili (50 totali)
 
 ### Documenti (6 tools)
 | Tool | Descrizione |
@@ -202,6 +202,25 @@ Aggiungi al file `.claude/settings.json` nella home o nel progetto:
 | `leeno_prezzi_list` | Lista tutti i prezzi |
 | `leeno_prezzi_count` | Conta prezzi in elenco |
 
+### Analisi Prezzi (5 tools) 🆕
+| Tool | Descrizione |
+|------|-------------|
+| `leeno_analisi_create` | Crea nuova analisi di prezzo |
+| `leeno_analisi_add_componente` | Aggiunge componente all'analisi |
+| `leeno_analisi_transfer` | Trasferisce analisi a Elenco Prezzi |
+| `leeno_analisi_list` | Lista tutte le analisi |
+| `leeno_analisi_create_complete` | Crea analisi completa con componenti |
+
+### Import Prezzari (4 tools) 🆕
+| Tool | Descrizione |
+|------|-------------|
+| `leeno_prezzi_import` | Importa prezzario da file XML |
+| `leeno_prezzi_detect_format` | Rileva formato file prezzario |
+| `leeno_prezzi_list_formats` | Lista formati supportati |
+| `leeno_prezzi_import_url` | Importa prezzario da URL |
+
+**Formati regionali supportati:** Toscana, Lombardia, Veneto, Liguria, Sardegna, Basilicata, Calabria, Campania, SIX, XPWE
+
 ### Contabilità (6 tools)
 | Tool | Descrizione |
 |------|-------------|
@@ -211,6 +230,23 @@ Aggiungi al file `.claude/settings.json` nella home o nel progetto:
 | `leeno_contab_get_stato` | Stato generale contabilità |
 | `leeno_contab_emetti_sal` | Emette nuovo SAL |
 | `leeno_contab_annulla_sal` | Annulla ultimo SAL |
+
+### Varianti (4 tools) 🆕
+| Tool | Descrizione |
+|------|-------------|
+| `leeno_variante_create` | Crea variante da COMPUTO |
+| `leeno_variante_info` | Info sulla variante |
+| `leeno_variante_compare` | Confronta VARIANTE vs COMPUTO |
+| `leeno_variante_delete` | Elimina variante |
+
+### Giornale Lavori (5 tools) 🆕
+| Tool | Descrizione |
+|------|-------------|
+| `leeno_giornale_create` | Crea giornale dei lavori |
+| `leeno_giornale_nuovo_giorno` | Aggiunge nuovo giorno |
+| `leeno_giornale_info` | Info sul giornale |
+| `leeno_giornale_list_giorni` | Lista tutti i giorni |
+| `leeno_giornale_add_nota` | Aggiunge nota a un giorno |
 
 ### Export (5 tools)
 | Tool | Descrizione |
