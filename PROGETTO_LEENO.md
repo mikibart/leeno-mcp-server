@@ -1,7 +1,8 @@
 # Progetto LeenO - Documentazione di Lavoro
 
-> **Ultimo aggiornamento**: 2026-01-20 (Test Suite Completata)
+> **Ultimo aggiornamento**: 2026-01-20 (Server MCP Testato e Funzionante)
 > **Versione LeenO analizzata**: 3.24.2 (20240714)
+> **Repository GitHub**: https://github.com/mikibart/leeno-mcp-server
 
 ---
 
@@ -306,8 +307,10 @@ Elenco Prezzi:
 - [x] **OBJ-6**: Implementazione Tool per gestione Elenco Prezzi ✅
 - [x] **OBJ-7**: Implementazione Tool per gestione Contabilità ✅
 - [x] **OBJ-8**: Implementazione Tool per Export ✅
-- [x] **OBJ-9**: Testing e documentazione ✅ (112 test)
-- [ ] **OBJ-10**: Packaging e distribuzione
+- [x] **OBJ-9**: Testing e documentazione ✅ (112 test passanti)
+- [x] **OBJ-9b**: Test live con LibreOffice ✅ (32 tools funzionanti)
+- [x] **OBJ-9c**: Pubblicazione GitHub ✅ (mikibart/leeno-mcp-server)
+- [ ] **OBJ-10**: Packaging e distribuzione (PyPI, Docker)
 
 ### Tool MCP Previsti
 
@@ -357,6 +360,21 @@ Elenco Prezzi:
 ---
 
 ## 5. Attività Completate
+
+### 2026-01-20 (Sessione 3 - Test Live e Pubblicazione)
+
+- [x] Migrazione da `Server` a `FastMCP` per compatibilità MCP SDK
+- [x] Test live connessione LibreOffice headless via UNO API
+- [x] Verifica funzionamento 32 MCP tools registrati
+- [x] Test creazione documenti, operazioni celle, pool documenti
+- [x] Pubblicazione repository su GitHub (mikibart/leeno-mcp-server)
+- [x] Aggiunta LICENSE MIT
+- [x] Aggiunta 12 topics al repository GitHub
+- [x] Aggiornamento README con istruzioni dettagliate:
+  - Installazione per Windows/Linux/macOS
+  - Configurazione Claude Desktop e Claude Code
+  - Troubleshooting errori comuni
+  - Sezione sviluppo e test
 
 ### 2026-01-20 (Sessione 2)
 
@@ -429,6 +447,33 @@ Elenco Prezzi:
 
 ## 8. Changelog
 
+### 2026-01-20 (Sessione 3 - Test Live e GitHub)
+
+- **FIX**: Migrato da `mcp.server.Server` a `mcp.server.FastMCP`
+  - Il decorator `@server.tool()` richiede FastMCP, non Server base
+  - Aggiornati tutti i file tools (documents, computo, elenco_prezzi, contabilita, export)
+  - Aggiornato `server.py` per usare `run_stdio_async()`
+
+- **TEST LIVE COMPLETATO**:
+  - LibreOffice headless avviato con: `soffice --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext"`
+  - Connessione UNO Bridge verificata
+  - 32 tools MCP registrati correttamente
+  - Operazioni documento (create, cell read/write) funzionanti
+  - Pool documenti operativo
+
+- **GITHUB**:
+  - Repository creato: https://github.com/mikibart/leeno-mcp-server
+  - LICENSE MIT aggiunta
+  - 12 topics aggiunti: mcp, libreoffice, python, computo-metrico, leeno, uno-api, ai-tools, construction, cost-estimation, model-context-protocol, claude, automation
+
+- **DOCS**: README.md completamente riscritto con:
+  - Istruzioni installazione Windows/Linux/macOS
+  - Nota importante su Python di LibreOffice
+  - Configurazione Claude Desktop e Claude Code
+  - Lista completa 32 tools
+  - Sezione Troubleshooting
+  - Sezione Sviluppo
+
 ### 2026-01-20 (Sessione 2 - Implementazione Completa)
 
 - **OBJ-3 → OBJ-9 COMPLETATI**: Implementazione completa MCP Server
@@ -453,12 +498,12 @@ Elenco Prezzi:
   - `contabilita.py`: Operazioni contabilità (voci, SAL)
   - `export.py`: Export PDF, CSV, XLSX
 
-  **MCP Tools (28 totali):**
+  **MCP Tools (32 totali):**
   - Documents: 6 tool (create, open, save, close, list, info)
-  - Computo: 9 tool (add/list/get/delete voce, add capitolo, add misura, totale, struttura)
+  - Computo: 8 tool (add/list/get/delete voce, add capitolo, add misura, totale, struttura)
   - Elenco Prezzi: 7 tool (search, get, add, edit, delete, list, count)
-  - Contabilità: 4 tool (add/list voci, SAL, stato)
-  - Export: 4 tool (PDF, CSV, XLSX, formats)
+  - Contabilità: 6 tool (add/list voci, get SAL, get stato, emetti SAL, annulla SAL)
+  - Export: 5 tool (PDF, CSV, XLSX, XPWE, formats)
 
   **Test Suite (112 test):**
   - `conftest.py`: Fixtures pytest con mock UNO
@@ -999,24 +1044,25 @@ dev = [
 ]
 ```
 
-### 9.10 Stato Implementazione ✅ COMPLETATO
+### 9.10 Stato Implementazione ✅ COMPLETATO E TESTATO
 
-Tutti i componenti dell'architettura sono stati implementati:
+Tutti i componenti dell'architettura sono stati implementati e testati con LibreOffice:
 
 | Componente | File | Stato |
 |------------|------|-------|
-| UNO Bridge | `connection/uno_bridge.py` | ✅ |
-| Document Pool | `connection/document_pool.py` | ✅ |
-| MCP Server | `server.py` | ✅ |
+| UNO Bridge | `connection/uno_bridge.py` | ✅ Testato live |
+| Document Pool | `connection/document_pool.py` | ✅ Testato live |
+| MCP Server | `server.py` | ✅ FastMCP |
 | Document Tools | `tools/documents.py` | ✅ 6 tool |
-| Computo Tools | `tools/computo.py` | ✅ 9 tool |
+| Computo Tools | `tools/computo.py` | ✅ 8 tool |
 | Prezzi Tools | `tools/elenco_prezzi.py` | ✅ 7 tool |
-| Contabilità Tools | `tools/contabilita.py` | ✅ 4 tool |
-| Export Tools | `tools/export.py` | ✅ 4 tool |
+| Contabilità Tools | `tools/contabilita.py` | ✅ 6 tool |
+| Export Tools | `tools/export.py` | ✅ 5 tool |
 | Modelli | `models/*.py` | ✅ 5 moduli |
 | Wrapper | `wrappers/*.py` | ✅ 6 moduli |
 | Mock UNO | `mocks/uno_mock.py` | ✅ |
 | Test Suite | `tests/*.py` | ✅ 112 test |
+| **TOTALE TOOLS** | | **32 tools** |
 
 ### 9.11 Prossimi Passi (OBJ-10 - Packaging)
 
@@ -1041,26 +1087,37 @@ Tutti i componenti dell'architettura sono stati implementati:
 
 ### 9.12 Come Usare il Server
 
+> **IMPORTANTE**: Su Windows è necessario usare il Python incluso in LibreOffice per accedere all'API UNO.
+
 ```bash
-# 1. Installare il pacchetto
+# 1. Clonare e installare dipendenze
+git clone https://github.com/mikibart/leeno-mcp-server.git
 cd leeno-mcp-server
-pip install -e .
+
+# Windows (usa Python di LibreOffice):
+"C:\Program Files\LibreOffice\program\python.exe" -m pip install mcp pydantic
 
 # 2. Avviare LibreOffice headless
-# Windows:
-scripts\start_libreoffice.bat
+# Windows (CMD):
+start "" "C:\Program Files\LibreOffice\program\soffice.exe" --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext"
+
 # Linux/Mac:
-./scripts/start_libreoffice.sh
+soffice --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext" &
 
 # 3. Avviare il server MCP
-leeno-mcp
+# Windows:
+"C:\Program Files\LibreOffice\program\python.exe" -m leeno_mcp.server
 
-# 4. Configurare client MCP (es. Claude)
-# Aggiungere a mcp_config.json:
+# 4. Configurare Claude Desktop (Windows)
+# File: %APPDATA%\Claude\claude_desktop_config.json
 {
   "mcpServers": {
     "leeno": {
-      "command": "leeno-mcp"
+      "command": "C:\\Program Files\\LibreOffice\\program\\python.exe",
+      "args": ["-m", "leeno_mcp.server"],
+      "env": {
+        "PYTHONPATH": "C:\\path\\to\\leeno-mcp-server\\src"
+      }
     }
   }
 }
@@ -1071,17 +1128,31 @@ leeno-mcp
 ```bash
 cd leeno-mcp-server
 
-# Installare dipendenze dev
-pip install -e ".[dev]"
+# Installare dipendenze dev (usa Python di LibreOffice su Windows)
+"C:\Program Files\LibreOffice\program\python.exe" -m pip install pytest pytest-asyncio
 
 # Eseguire tutti i test
-pytest tests/ -v
+"C:\Program Files\LibreOffice\program\python.exe" -m pytest tests/ -v
 
 # Con coverage
-pytest tests/ --cov=leeno_mcp --cov-report=html
+"C:\Program Files\LibreOffice\program\python.exe" -m pytest tests/ --cov=leeno_mcp --cov-report=html
 ```
+
+### 9.14 Note Tecniche Importanti
+
+1. **Python di LibreOffice**: Su Windows, l'API UNO è accessibile solo dal Python incluso in LibreOffice (`C:\Program Files\LibreOffice\program\python.exe`). Usare il Python di sistema causa errori di conflitto DLL.
+
+2. **Stringa di connessione**: La stringa corretta per LibreOffice 7+ è:
+   ```
+   uno:socket,host=localhost,port=2002;urp;StarOffice.ComponentContext
+   ```
+
+3. **FastMCP vs Server**: Il decorator `@server.tool()` richiede `FastMCP`, non la classe `Server` base del SDK MCP.
+
+4. **Documenti LeenO**: Un documento viene riconosciuto come LeenO se contiene i fogli `S2` e `COMPUTO`.
 
 ---
 
 > _Documento generato e mantenuto durante la sessione di lavoro su LeenO_
-> _Implementazione completata: 2026-01-20_
+> _Implementazione completata e testata: 2026-01-20_
+> _Repository: https://github.com/mikibart/leeno-mcp-server_
