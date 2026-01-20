@@ -102,6 +102,10 @@ class UnoBridge:
 
                 self._connected = True
                 logger.info("Successfully connected to LibreOffice")
+
+                # Initialize LeenO macros with the context
+                self._initialize_leeno_macros()
+
                 return True
 
             except NoConnectException as e:
@@ -118,6 +122,18 @@ class UnoBridge:
 
         # All attempts failed
         raise LibreOfficeNotRunningError()
+
+    def _initialize_leeno_macros(self) -> None:
+        """Initialize LeenO macro integration with current context."""
+        try:
+            from .leeno_macros import get_macros
+            macros = get_macros()
+            if macros.initialize(self._context):
+                logger.info("LeenO macros initialized")
+            else:
+                logger.warning("Failed to initialize LeenO macros")
+        except Exception as e:
+            logger.warning(f"Could not initialize LeenO macros: {e}")
 
     def disconnect(self) -> None:
         """Disconnect from LibreOffice."""

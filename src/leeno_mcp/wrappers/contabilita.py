@@ -7,7 +7,7 @@ from typing import Optional, List, Any
 from datetime import date
 
 from .base import LeenoWrapper
-from ..connection import get_pool
+from ..connection import get_pool, get_macros
 from ..models.contabilita import VoceContabilita, VoceContabilitaInput, SALInfo, StatoContabilita
 from ..utils.exceptions import VoceNotFoundError, OperationError, ContabilitaError
 
@@ -44,7 +44,10 @@ class ContabilitaWrapper(LeenoWrapper):
 
     def add_voce(self, input_data: VoceContabilitaInput) -> VoceContabilita:
         """
-        Add a new entry to contabilità.
+        Add a new entry to contabilità using LeenO native macro.
+
+        Uses insertVoceContabilita which copies the template from S5 sheet
+        and sets up all styles correctly.
 
         Args:
             input_data: VoceContabilitaInput with entry data
@@ -53,19 +56,19 @@ class ContabilitaWrapper(LeenoWrapper):
             Created VoceContabilita
         """
         self.ensure_leeno()
+        macros = get_macros()
+
+        if not macros.is_initialized:
+            raise OperationError("add_voce", "LeenO macros not initialized - cannot add voce")
 
         with self.suspend_refresh():
             try:
                 # Find insertion point
                 insert_row = self._find_insertion_point()
 
-                # Get template from S5 sheet
-                s5_sheet = self.get_sheet(self.SHEET_S5)
-                template_range = s5_sheet.getCellRangeByPosition(0, 22, 48, 26)
-
-                # Insert rows and copy template
-                self.insert_rows(self._sheet, insert_row, 5)
-                self.copy_range(s5_sheet, template_range, self._sheet, insert_row)
+                # Use native LeenO macro to insert voce template
+                # This is the ONLY correct way
+                macros.insertVoceContabilita(self._sheet, insert_row)
 
                 # Set entry data
                 self.set_cell_value(self._sheet, 1, insert_row + 1, input_data.codice)
@@ -325,14 +328,11 @@ class ContabilitaWrapper(LeenoWrapper):
             return None
 
     def _numera_voci(self) -> int:
-        """Renumber all entries. Returns count."""
-        count = 0
-        last_row = self.get_last_row(self._sheet)
+        """Renumber all entries using native LeenO macro. Returns count."""
+        macros = get_macros()
 
-        for row in range(4, last_row + 1):
-            style = self.get_cell_style(self._sheet, 0, row)
-            if style in (self.STYLE_VOCE_START, "Comp Start Attributo_R"):
-                count += 1
-                self.set_cell_value(self._sheet, 0, row + 1, count)
+        if not macros.is_initialized:
+            raise OperationError("_numera_voci", "LeenO macros not initialized")
 
-        return count
+        # Use native macro - the ONLY correct way
+        return macros.numeraVoci(self._sheet, 0, 1)

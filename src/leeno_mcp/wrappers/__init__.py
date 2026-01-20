@@ -6,6 +6,7 @@ from .computo import ComputoWrapper
 from .elenco_prezzi import ElencoPrezziWrapper
 from .contabilita import ContabilitaWrapper
 from .export import ExportWrapper
+from .analisi import AnalisiWrapper, AnalisiPrezzo, AnalisiInput, ComponenteAnalisi
 
 __all__ = [
     "LeenoWrapper",
@@ -17,4 +18,8 @@ __all__ = [
     "ElencoPrezziWrapper",
     "ContabilitaWrapper",
     "ExportWrapper",
+    "AnalisiWrapper",
+    "AnalisiPrezzo",
+    "AnalisiInput",
+    "ComponenteAnalisi",
 ]

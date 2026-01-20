@@ -85,3 +85,34 @@ Usare sempre l'interprete Python di LibreOffice:
 ```
 "C:\Program Files\LibreOffice\program\python.exe"
 ```
+
+## MCP Server - Integrazione Macro Native
+
+Il MCP server utilizza le macro LeenO native tramite il modulo `leeno_macros.py`:
+
+```python
+from leeno_mcp.connection import get_macros
+
+macros = get_macros()
+if macros.is_initialized:
+    # Usa funzioni native (più veloci e affidabili)
+    macros.insertVoceComputoGrezza(oSheet, row)
+    macros.copia_riga_computo(row)
+    macros.numeraVoci(oSheet, 0, 1)
+    macros.inizializzaAnalisi(oDoc)
+```
+
+### Wrapper disponibili
+
+- `ComputoWrapper` - Operazioni su COMPUTO (add_voce, add_misura, list_voci)
+- `ContabilitaWrapper` - Operazioni su CONTABILITA
+- `AnalisiWrapper` - Operazioni su Analisi di Prezzo (crea_analisi, trasferisci_a_elenco_prezzi)
+- `ElencoPrezziWrapper` - Operazioni su Elenco Prezzi
+
+### Inizializzazione automatica
+
+Le macro vengono inizializzate automaticamente alla connessione con LibreOffice.
+
+**IMPORTANTE**: Non esistono fallback manuali. Se le macro non sono inizializzate,
+le operazioni falliranno con un errore chiaro. Questo garantisce che tutte le
+operazioni usino SEMPRE le macro native LeenO.

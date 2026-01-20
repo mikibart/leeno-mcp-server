@@ -6,7 +6,7 @@ import logging
 from typing import Optional, List, Dict, Any, Tuple
 
 from .base import LeenoWrapper, parse_currency
-from ..connection import get_pool
+from ..connection import get_pool, get_macros
 from ..models.voce import VoceComputo, RigaMisura, VoceComputoInput, MisuraInput
 from ..models.capitolo import Capitolo, CapitoloInput, StrutturaComputo
 from ..utils.exceptions import VoceNotFoundError, SheetNotFoundError, OperationError, PrezzoNotFoundError
@@ -117,11 +117,11 @@ class ComputoWrapper(LeenoWrapper):
 
     def add_voce(self, input_data: VoceComputoInput) -> VoceComputo:
         """
-        Add a new voce to the computo using LeenO template and formulas.
+        Add a new voce to the computo using LeenO native macro.
 
-        The template from S5 sheet is copied, and VLOOKUP formulas automatically
-        retrieve descrizione, unita_misura, and prezzo_unitario from Elenco Prezzi
-        based on the codice.
+        Uses insertVoceComputoGrezza which copies the template from S5 sheet
+        and sets up all styles and formulas correctly. VLOOKUP formulas
+        automatically retrieve data from Elenco Prezzi based on the codice.
 
         Args:
             input_data: VoceComputoInput with voce data
@@ -133,19 +133,19 @@ class ComputoWrapper(LeenoWrapper):
             OperationError: If operation fails
         """
         self.ensure_leeno()
+        macros = get_macros()
+
+        if not macros.is_initialized:
+            raise OperationError("add_voce", "LeenO macros not initialized - cannot add voce")
 
         with self.suspend_refresh():
             try:
                 # Find insertion point (before totals row)
                 insert_row = self._find_insertion_point()
 
-                # Get template from S5 sheet (rows 9-12, columns A-AQ)
-                s5_sheet = self.get_sheet(self.SHEET_S5)
-                template_range = s5_sheet.getCellRangeByPosition(0, 8, 42, 11)
-
-                # Insert 4 rows and copy template
-                self.insert_rows(self._sheet, insert_row, 4)
-                self.copy_range(s5_sheet, template_range, self._sheet, insert_row)
+                # Use native LeenO macro to insert voce template from S5
+                # This is the ONLY correct way - copies rows 8-11 from S5 with all styles
+                macros.insertVoceComputoGrezza(self._sheet, insert_row)
 
                 # Set the codice articolo (column B, row +1)
                 # This is the "primary key" - VLOOKUP formulas use this to fetch all other data
@@ -168,7 +168,7 @@ class ComputoWrapper(LeenoWrapper):
                 if input_data.prezzo_unitario is not None:
                     self.set_cell_value(self._sheet, 11, insert_row + 3, input_data.prezzo_unitario)
 
-                # Renumber voci
+                # Renumber voci using native macro if available
                 self._numera_voci()
 
                 # Generate voce ID
@@ -293,7 +293,10 @@ class ComputoWrapper(LeenoWrapper):
 
     def add_misura(self, voce_id: str, misura: MisuraInput) -> bool:
         """
-        Add a measurement row to a voce.
+        Add a measurement row to a voce using LeenO native macro.
+
+        Uses copia_riga_computo which copies the measurement template from S5
+        and sets up all styles correctly.
 
         Args:
             voce_id: Voce ID
@@ -303,14 +306,18 @@ class ComputoWrapper(LeenoWrapper):
             True if added successfully
         """
         voce = self.get_voce(voce_id)
+        macros = get_macros()
+
+        if not macros.is_initialized:
+            raise OperationError("add_misura", "LeenO macros not initialized - cannot add misura")
 
         with self.suspend_refresh():
             try:
                 # Find measurement area (between voce start and end)
                 insert_row = voce.riga_fine  # Insert before totals row
 
-                # Insert row
-                self.insert_rows(self._sheet, insert_row, 1)
+                # Use native LeenO macro to insert measurement row
+                macros.copia_riga_computo(insert_row)
 
                 # Set measurement data
                 self.set_cell_value(self._sheet, 2, insert_row, misura.descrizione)
@@ -536,14 +543,11 @@ class ComputoWrapper(LeenoWrapper):
         return 5
 
     def _numera_voci(self) -> int:
-        """Renumber all voci. Returns count."""
-        count = 0
-        last_row = self.get_last_row(self._sheet)
+        """Renumber all voci using native LeenO macro. Returns count."""
+        macros = get_macros()
 
-        for row in range(4, last_row + 1):
-            style = self.get_cell_style(self._sheet, 0, row)
-            if style == self.STYLE_VOCE_START:
-                count += 1
-                self.set_cell_value(self._sheet, 0, row + 1, count)
+        if not macros.is_initialized:
+            raise OperationError("_numera_voci", "LeenO macros not initialized")
 
-        return count
+        # Use native macro - the ONLY correct way
+        return macros.numeraVoci(self._sheet, 0, 1)
