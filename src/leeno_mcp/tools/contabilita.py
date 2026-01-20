@@ -6,7 +6,7 @@ import logging
 from typing import Optional
 from datetime import date
 
-from mcp.server import Server
+from mcp.server import FastMCP
 from mcp.types import TextContent
 
 from ..wrappers import ContabilitaWrapper
@@ -16,7 +16,7 @@ from ..utils.exceptions import LeenoMCPError
 logger = logging.getLogger(__name__)
 
 
-def register_contabilita_tools(server: Server):
+def register_contabilita_tools(server: FastMCP):
     """Register contabilità management tools with the MCP server."""
 
     @server.tool()

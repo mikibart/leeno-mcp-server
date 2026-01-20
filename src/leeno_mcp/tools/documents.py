@@ -5,8 +5,8 @@ MCP Tools for document operations.
 import logging
 from typing import Optional
 
-from mcp.server import Server
-from mcp.types import Tool, TextContent
+from mcp.server import FastMCP
+from mcp.types import TextContent
 
 from ..wrappers import DocumentWrapper, create_document, open_document, get_document
 from ..connection import get_pool
@@ -15,7 +15,7 @@ from ..utils.exceptions import LeenoMCPError
 logger = logging.getLogger(__name__)
 
 
-def register_document_tools(server: Server):
+def register_document_tools(server: FastMCP):
     """Register document management tools with the MCP server."""
 
     @server.tool()

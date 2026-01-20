@@ -96,17 +96,17 @@ class TestServerCreation:
         """Test server creation with all tools registered."""
         from unittest.mock import patch
 
-        with patch('leeno_mcp.server.Server') as MockServer:
+        with patch('leeno_mcp.server.FastMCP') as MockFastMCP:
             mock_server_instance = MagicMock()
             mock_server_instance.tool = MagicMock(return_value=lambda f: f)
-            MockServer.return_value = mock_server_instance
+            MockFastMCP.return_value = mock_server_instance
 
             from leeno_mcp.server import create_server
 
             server = create_server()
 
-            # Verify Server was created
-            MockServer.assert_called_once()
+            # Verify FastMCP was created
+            MockFastMCP.assert_called_once()
 
 
 class TestToolHelpers:

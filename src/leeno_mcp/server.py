@@ -10,8 +10,7 @@ import logging
 import sys
 from typing import Optional
 
-from mcp.server import Server
-from mcp.server.stdio import stdio_server
+from mcp.server import FastMCP
 
 from .config import get_config, ServerConfig
 from .connection import get_bridge, get_pool
@@ -32,11 +31,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def create_server() -> Server:
+def create_server() -> FastMCP:
     """Create and configure the MCP server."""
     config = get_config()
 
-    server = Server(config.name)
+    server = FastMCP(config.name)
 
     # Register all tools
     register_document_tools(server)
@@ -50,7 +49,7 @@ def create_server() -> Server:
     return server
 
 
-async def run_server(server: Server):
+async def run_server(server: FastMCP):
     """Run the MCP server with stdio transport."""
     logger.info("Starting LeenO MCP Server...")
 
@@ -63,13 +62,8 @@ async def run_server(server: Server):
         logger.warning(f"Could not connect to LibreOffice: {e}")
         logger.warning("Server will start, but document operations will fail until LibreOffice is available.")
 
-    # Run server
-    async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            server.create_initialization_options()
-        )
+    # Run server using FastMCP's stdio method
+    await server.run_stdio_async()
 
 
 def main():

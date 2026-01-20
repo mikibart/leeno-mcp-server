@@ -5,7 +5,7 @@ MCP Tools for elenco prezzi (price list) operations.
 import logging
 from typing import Optional
 
-from mcp.server import Server
+from mcp.server import FastMCP
 from mcp.types import TextContent
 
 from ..wrappers import ElencoPrezziWrapper
@@ -15,7 +15,7 @@ from ..utils.exceptions import LeenoMCPError
 logger = logging.getLogger(__name__)
 
 
-def register_elenco_prezzi_tools(server: Server):
+def register_elenco_prezzi_tools(server: FastMCP):
     """Register price list management tools with the MCP server."""
 
     @server.tool()

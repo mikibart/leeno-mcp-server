@@ -5,7 +5,7 @@ MCP Tools for export operations.
 import logging
 from typing import Optional, List
 
-from mcp.server import Server
+from mcp.server import FastMCP
 from mcp.types import TextContent
 
 from ..wrappers import ExportWrapper
@@ -14,7 +14,7 @@ from ..utils.exceptions import LeenoMCPError
 logger = logging.getLogger(__name__)
 
 
-def register_export_tools(server: Server):
+def register_export_tools(server: FastMCP):
     """Register export tools with the MCP server."""
 
     @server.tool()
