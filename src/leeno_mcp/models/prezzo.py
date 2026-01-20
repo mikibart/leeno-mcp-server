@@ -14,8 +14,8 @@ class Prezzo(BaseModel):
     descrizione_estesa: str = Field(default="", description="Extended description")
     unita_misura: str = Field(default="", description="Unit of measurement")
     prezzo_unitario: float = Field(default=0, description="Unit price", ge=0)
-    sicurezza: float = Field(default=0, description="Safety percentage (0-100)", ge=0, le=100)
-    manodopera: float = Field(default=0, description="Labor percentage (0-100)", ge=0, le=100)
+    sicurezza: float = Field(default=0, description="Safety percentage (0-100)", ge=0)
+    manodopera: float = Field(default=0, description="Labor percentage (0-100)", ge=0)
     categoria: Optional[str] = Field(default=None, description="Category/Chapter")
     riga: int = Field(default=0, description="Row number in spreadsheet", ge=0)
 

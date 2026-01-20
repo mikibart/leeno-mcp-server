@@ -15,6 +15,58 @@ from ..utils.exceptions import SheetNotFoundError, InvalidDocumentError
 logger = logging.getLogger(__name__)
 
 
+def parse_percentage(value: Any) -> float:
+    """
+    Parse a percentage value.
+
+    Handles formats like:
+    - "50.11%" or "50,11%"
+    - 0.5011 (decimal form, will be multiplied by 100)
+    - 50.11 (already a percentage)
+
+    Args:
+        value: Value to parse (string or numeric)
+
+    Returns:
+        Float value as percentage (0-100)
+    """
+    if isinstance(value, (int, float)):
+        # If value is small (< 1), assume it's decimal form
+        if abs(value) < 1:
+            return value * 100
+        return float(value)
+
+    if not value or value == "":
+        return 0.0
+
+    # Convert to string and strip
+    s = str(value).strip()
+
+    # Handle percentage sign
+    is_percentage = '%' in s
+    s = s.replace('%', '').strip()
+
+    # Handle Italian decimal comma
+    s = s.replace(',', '.')
+
+    # Remove any remaining non-numeric characters
+    s = re.sub(r'[^\d.\-]', '', s)
+
+    if not s:
+        return 0.0
+
+    try:
+        result = float(s)
+        # If it was explicitly a percentage string, it's already in correct form
+        # If it's a small decimal without %, multiply by 100
+        if not is_percentage and abs(result) < 1:
+            result *= 100
+        return result
+    except ValueError:
+        logger.warning(f"Could not parse percentage value: {value}")
+        return 0.0
+
+
 def parse_currency(value: Any) -> float:
     """
     Parse a currency value that may have Italian formatting.

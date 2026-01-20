@@ -5,7 +5,7 @@ Elenco Prezzi wrapper for price list operations.
 import logging
 from typing import Optional, List, Any
 
-from .base import LeenoWrapper, parse_currency
+from .base import LeenoWrapper, parse_currency, parse_percentage
 from ..connection import get_pool
 from ..models.prezzo import Prezzo, PrezzoInput, PrezzoSearchResult
 from ..utils.exceptions import PrezzoNotFoundError, OperationError
@@ -306,9 +306,9 @@ class ElencoPrezziWrapper(LeenoWrapper):
         um = str(self.get_cell_value(self._sheet, self.COL_UM, row) or "")
         prezzo = parse_currency(self.get_cell_value(self._sheet, self.COL_PREZZO, row))
 
-        # Sicurezza and manodopera are stored as decimals (0.03 = 3%)
-        sicurezza = parse_currency(self.get_cell_value(self._sheet, self.COL_SICUREZZA, row)) * 100
-        manodopera = parse_currency(self.get_cell_value(self._sheet, self.COL_MANODOPERA, row)) * 100
+        # Sicurezza and manodopera - use parse_percentage to handle various formats
+        sicurezza = parse_percentage(self.get_cell_value(self._sheet, self.COL_SICUREZZA, row))
+        manodopera = parse_percentage(self.get_cell_value(self._sheet, self.COL_MANODOPERA, row))
 
         return Prezzo(
             codice=codice,

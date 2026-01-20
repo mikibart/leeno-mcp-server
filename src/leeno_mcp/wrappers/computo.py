@@ -9,7 +9,7 @@ from .base import LeenoWrapper, parse_currency
 from ..connection import get_pool
 from ..models.voce import VoceComputo, RigaMisura, VoceComputoInput, MisuraInput
 from ..models.capitolo import Capitolo, CapitoloInput, StrutturaComputo
-from ..utils.exceptions import VoceNotFoundError, SheetNotFoundError, OperationError
+from ..utils.exceptions import VoceNotFoundError, SheetNotFoundError, OperationError, PrezzoNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +119,9 @@ class ComputoWrapper(LeenoWrapper):
         """
         Add a new voce to the computo.
 
+        If the codice exists in the Elenco Prezzi, automatically fills in
+        descrizione, unita_misura, and prezzo_unitario if not provided.
+
         Args:
             input_data: VoceComputoInput with voce data
 
@@ -129,6 +132,19 @@ class ComputoWrapper(LeenoWrapper):
             OperationError: If operation fails
         """
         self.ensure_leeno()
+
+        # Try to lookup price data from Elenco Prezzi if not fully provided
+        prezzo_data = None
+        if input_data.codice:
+            try:
+                from .elenco_prezzi import ElencoPrezziWrapper
+                ep_wrapper = ElencoPrezziWrapper(self.doc_id)
+                prezzo_data = ep_wrapper.get_prezzo(input_data.codice)
+                logger.info(f"Found price for codice {input_data.codice}: €{prezzo_data.prezzo_unitario}")
+            except PrezzoNotFoundError:
+                logger.debug(f"Price not found for codice {input_data.codice}, using input data only")
+            except Exception as e:
+                logger.warning(f"Error looking up price: {e}")
 
         with self.suspend_refresh():
             try:
@@ -143,17 +159,30 @@ class ComputoWrapper(LeenoWrapper):
                 self.insert_rows(self._sheet, insert_row, 4)
                 self.copy_range(s5_sheet, template_range, self._sheet, insert_row)
 
+                # Determine values to use (input > price lookup > empty)
+                descrizione = input_data.descrizione
+                unita_misura = input_data.unita_misura
+                prezzo_unitario = input_data.prezzo_unitario
+
+                if prezzo_data:
+                    if not descrizione:
+                        descrizione = prezzo_data.descrizione
+                    if not unita_misura:
+                        unita_misura = prezzo_data.unita_misura
+                    if prezzo_unitario is None:
+                        prezzo_unitario = prezzo_data.prezzo_unitario
+
                 # Set voce data
                 self.set_cell_value(self._sheet, 1, insert_row + 1, input_data.codice)
 
-                if input_data.descrizione:
-                    self.set_cell_value(self._sheet, 2, insert_row + 1, input_data.descrizione)
+                if descrizione:
+                    self.set_cell_value(self._sheet, 2, insert_row + 1, descrizione)
 
-                if input_data.unita_misura:
-                    self.set_cell_value(self._sheet, 8, insert_row + 3, f"[{input_data.unita_misura}]")
+                if unita_misura:
+                    self.set_cell_value(self._sheet, 8, insert_row + 3, f"[{unita_misura}]")
 
-                if input_data.prezzo_unitario:
-                    self.set_cell_value(self._sheet, 11, insert_row + 3, input_data.prezzo_unitario)
+                if prezzo_unitario is not None:
+                    self.set_cell_value(self._sheet, 11, insert_row + 3, prezzo_unitario)
 
                 if input_data.quantita:
                     self.set_cell_value(self._sheet, 9, insert_row + 3, input_data.quantita)

@@ -53,14 +53,19 @@ def register_computo_tools(server: FastMCP):
             )
             voce = wrapper.add_voce(input_data)
 
-            return [TextContent(
-                type="text",
-                text=f"Voce added successfully.\n"
-                     f"voce_id: {voce.voce_id}\n"
-                     f"numero: {voce.numero}\n"
-                     f"codice: {voce.codice}\n"
-                     f"riga: {voce.riga_inizio}"
-            )]
+            lines = [
+                "Voce added successfully.",
+                f"voce_id: {voce.voce_id}",
+                f"numero: {voce.numero}",
+                f"codice: {voce.codice}",
+                f"descrizione: {voce.descrizione[:60]}..." if len(voce.descrizione) > 60 else f"descrizione: {voce.descrizione}",
+                f"unita_misura: {voce.unita_misura}",
+                f"quantita: {voce.quantita}",
+                f"prezzo_unitario: € {voce.prezzo_unitario:,.2f}",
+                f"importo: € {voce.importo:,.2f}",
+                f"riga: {voce.riga_inizio}"
+            ]
+            return [TextContent(type="text", text="\n".join(lines))]
 
         except LeenoMCPError as e:
             return [TextContent(type="text", text=f"Error: {e.message}")]
