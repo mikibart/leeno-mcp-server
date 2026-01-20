@@ -5,13 +5,80 @@ Provides common functionality for all LeenO wrappers.
 """
 
 import logging
-from typing import Any, Optional, List
+import re
+from typing import Any, Optional, List, Union
 from contextlib import contextmanager
 
 from ..connection.document_pool import DocumentInfo
 from ..utils.exceptions import SheetNotFoundError, InvalidDocumentError
 
 logger = logging.getLogger(__name__)
+
+
+def parse_currency(value: Any) -> float:
+    """
+    Parse a currency value that may have Italian formatting.
+
+    Handles formats like:
+    - "€ 67,75" or "€ 67.75"
+    - "€ 36.066,51" (Italian: dot as thousands, comma as decimal)
+    - "€ 36,066.51" (US: comma as thousands, dot as decimal)
+    - Plain numbers: 67.75, 67,75
+
+    Args:
+        value: Value to parse (string or numeric)
+
+    Returns:
+        Float value
+    """
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    if not value or value == "":
+        return 0.0
+
+    # Convert to string and strip
+    s = str(value).strip()
+
+    # Remove currency symbols and whitespace
+    s = re.sub(r'[€$£¥\s]', '', s)
+
+    # Handle special characters that might appear as currency symbol
+    s = s.replace('�', '').strip()
+
+    # If empty after cleaning, return 0
+    if not s or s in ('#N/D', '#N/A', '#REF!', '#VALUE!', '-'):
+        return 0.0
+
+    # Detect format: Italian (1.234,56) vs US (1,234.56)
+    # Count dots and commas
+    dots = s.count('.')
+    commas = s.count(',')
+
+    if dots > 0 and commas > 0:
+        # Both present - determine which is decimal separator
+        last_dot = s.rfind('.')
+        last_comma = s.rfind(',')
+
+        if last_comma > last_dot:
+            # Italian format: 1.234,56 -> comma is decimal
+            s = s.replace('.', '').replace(',', '.')
+        else:
+            # US format: 1,234.56 -> dot is decimal
+            s = s.replace(',', '')
+    elif commas == 1 and dots == 0:
+        # Single comma - treat as decimal separator (Italian)
+        s = s.replace(',', '.')
+    elif commas > 1:
+        # Multiple commas - thousands separators (US format, no decimals)
+        s = s.replace(',', '')
+    # else: dots only or no separators - use as-is
+
+    try:
+        return float(s)
+    except ValueError:
+        logger.warning(f"Could not parse currency value: {value}")
+        return 0.0
 
 
 class LeenoWrapper:

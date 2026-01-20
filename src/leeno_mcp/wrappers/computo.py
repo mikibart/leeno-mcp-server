@@ -5,7 +5,7 @@ Computo wrapper for LeenO computo metrico operations.
 import logging
 from typing import Optional, List, Dict, Any, Tuple
 
-from .base import LeenoWrapper
+from .base import LeenoWrapper, parse_currency
 from ..connection import get_pool
 from ..models.voce import VoceComputo, RigaMisura, VoceComputoInput, MisuraInput
 from ..models.capitolo import Capitolo, CapitoloInput, StrutturaComputo
@@ -351,9 +351,9 @@ class ComputoWrapper(LeenoWrapper):
             style = self.get_cell_style(self._sheet, 0, row)
             if style == "Comp TOTALI":
                 return {
-                    "totale": float(self.get_cell_value(self._sheet, 18, row) or 0),
-                    "sicurezza": float(self.get_cell_value(self._sheet, 17, row) or 0),
-                    "manodopera": float(self.get_cell_value(self._sheet, 30, row) or 0)
+                    "totale": parse_currency(self.get_cell_value(self._sheet, 18, row)),
+                    "sicurezza": parse_currency(self.get_cell_value(self._sheet, 17, row)),
+                    "manodopera": parse_currency(self.get_cell_value(self._sheet, 30, row))
                 }
 
         return {"totale": 0, "sicurezza": 0, "manodopera": 0}
@@ -411,11 +411,11 @@ class ComputoWrapper(LeenoWrapper):
             um_cell = str(self.get_cell_value(self._sheet, 8, end_row) or "")
             unita_misura = um_cell.replace("[", "").replace("]", "")
 
-            quantita = float(self.get_cell_value(self._sheet, 9, end_row) or 0)
-            prezzo = float(self.get_cell_value(self._sheet, 11, end_row) or 0)
-            importo = float(self.get_cell_value(self._sheet, 18, end_row) or 0)
-            sicurezza = float(self.get_cell_value(self._sheet, 17, end_row) or 0)
-            manodopera = float(self.get_cell_value(self._sheet, 30, end_row) or 0)
+            quantita = parse_currency(self.get_cell_value(self._sheet, 9, end_row))
+            prezzo = parse_currency(self.get_cell_value(self._sheet, 11, end_row))
+            importo = parse_currency(self.get_cell_value(self._sheet, 18, end_row))
+            sicurezza = parse_currency(self.get_cell_value(self._sheet, 17, end_row))
+            manodopera = parse_currency(self.get_cell_value(self._sheet, 30, end_row))
 
             return VoceComputo(
                 voce_id=f"V{numero:03d}",

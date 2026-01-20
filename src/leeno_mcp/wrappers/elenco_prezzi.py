@@ -5,7 +5,7 @@ Elenco Prezzi wrapper for price list operations.
 import logging
 from typing import Optional, List, Any
 
-from .base import LeenoWrapper
+from .base import LeenoWrapper, parse_currency
 from ..connection import get_pool
 from ..models.prezzo import Prezzo, PrezzoInput, PrezzoSearchResult
 from ..utils.exceptions import PrezzoNotFoundError, OperationError
@@ -105,7 +105,7 @@ class ElencoPrezziWrapper(LeenoWrapper):
 
             if match:
                 um = str(self.get_cell_value(self._sheet, self.COL_UM, row) or "")
-                prezzo = float(self.get_cell_value(self._sheet, self.COL_PREZZO, row) or 0)
+                prezzo = parse_currency(self.get_cell_value(self._sheet, self.COL_PREZZO, row))
 
                 results.append(PrezzoSearchResult(
                     codice=codice,
@@ -304,11 +304,11 @@ class ElencoPrezziWrapper(LeenoWrapper):
         descrizione = str(self.get_cell_value(self._sheet, self.COL_DESCRIZIONE, row) or "")
         descrizione_estesa = str(self.get_cell_value(self._sheet, self.COL_DESCRIZIONE_ESTESA, row) or "")
         um = str(self.get_cell_value(self._sheet, self.COL_UM, row) or "")
-        prezzo = float(self.get_cell_value(self._sheet, self.COL_PREZZO, row) or 0)
+        prezzo = parse_currency(self.get_cell_value(self._sheet, self.COL_PREZZO, row))
 
         # Sicurezza and manodopera are stored as decimals (0.03 = 3%)
-        sicurezza = float(self.get_cell_value(self._sheet, self.COL_SICUREZZA, row) or 0) * 100
-        manodopera = float(self.get_cell_value(self._sheet, self.COL_MANODOPERA, row) or 0) * 100
+        sicurezza = parse_currency(self.get_cell_value(self._sheet, self.COL_SICUREZZA, row)) * 100
+        manodopera = parse_currency(self.get_cell_value(self._sheet, self.COL_MANODOPERA, row)) * 100
 
         return Prezzo(
             codice=codice,
