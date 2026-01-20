@@ -244,9 +244,11 @@ class TestPrezzo:
         """Test that percentages are validated."""
         from leeno_mcp.models.prezzo import Prezzo
 
-        with pytest.raises(ValidationError):
-            Prezzo(codice="01.A01.001", sicurezza=150.0)  # > 100
+        # Values > 100 are now allowed (some documents have unusual percentages)
+        prezzo = Prezzo(codice="01.A01.001", sicurezza=150.0)
+        assert prezzo.sicurezza == 150.0
 
+        # Negative values should still raise an error
         with pytest.raises(ValidationError):
             Prezzo(codice="01.A01.001", manodopera=-5.0)  # < 0
 

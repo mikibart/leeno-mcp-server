@@ -89,7 +89,7 @@ class ElencoPrezziWrapper(LeenoWrapper):
 
         for row in range(4, last_row + 1):
             style = self.get_cell_style(self._sheet, self.COL_CODICE, row)
-            if style != self.STYLE_EP_CODE:
+            if style not in self.EP_CODE_STYLES:
                 continue
 
             codice = str(self.get_cell_value(self._sheet, self.COL_CODICE, row) or "")
@@ -138,7 +138,7 @@ class ElencoPrezziWrapper(LeenoWrapper):
 
         for row in range(4, last_row + 1):
             style = self.get_cell_style(self._sheet, self.COL_CODICE, row)
-            if style != self.STYLE_EP_CODE:
+            if style not in self.EP_CODE_STYLES:
                 continue
 
             if skipped < offset:
@@ -276,7 +276,7 @@ class ElencoPrezziWrapper(LeenoWrapper):
 
         for row in range(4, last_row + 1):
             style = self.get_cell_style(self._sheet, self.COL_CODICE, row)
-            if style == self.STYLE_EP_CODE:
+            if style in self.EP_CODE_STYLES:
                 count += 1
 
         return count
@@ -289,7 +289,7 @@ class ElencoPrezziWrapper(LeenoWrapper):
 
         for row in range(4, last_row + 1):
             style = self.get_cell_style(self._sheet, self.COL_CODICE, row)
-            if style != self.STYLE_EP_CODE:
+            if style not in self.EP_CODE_STYLES:
                 continue
 
             cell_value = self.get_cell_value(self._sheet, self.COL_CODICE, row)
@@ -328,7 +328,7 @@ class ElencoPrezziWrapper(LeenoWrapper):
         # Find last price row
         for row in range(last_row, 3, -1):
             style = self.get_cell_style(self._sheet, self.COL_CODICE, row)
-            if style == self.STYLE_EP_CODE:
+            if style in self.EP_CODE_STYLES:
                 return row + 1
 
         # Default: after header

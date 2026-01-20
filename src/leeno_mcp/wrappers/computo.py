@@ -117,10 +117,11 @@ class ComputoWrapper(LeenoWrapper):
 
     def add_voce(self, input_data: VoceComputoInput) -> VoceComputo:
         """
-        Add a new voce to the computo.
+        Add a new voce to the computo using LeenO template and formulas.
 
-        If the codice exists in the Elenco Prezzi, automatically fills in
-        descrizione, unita_misura, and prezzo_unitario if not provided.
+        The template from S5 sheet is copied, and VLOOKUP formulas automatically
+        retrieve descrizione, unita_misura, and prezzo_unitario from Elenco Prezzi
+        based on the codice.
 
         Args:
             input_data: VoceComputoInput with voce data
@@ -133,68 +134,49 @@ class ComputoWrapper(LeenoWrapper):
         """
         self.ensure_leeno()
 
-        # Try to lookup price data from Elenco Prezzi if not fully provided
-        prezzo_data = None
-        if input_data.codice:
-            try:
-                from .elenco_prezzi import ElencoPrezziWrapper
-                ep_wrapper = ElencoPrezziWrapper(self.doc_id)
-                prezzo_data = ep_wrapper.get_prezzo(input_data.codice)
-                logger.info(f"Found price for codice {input_data.codice}: €{prezzo_data.prezzo_unitario}")
-            except PrezzoNotFoundError:
-                logger.debug(f"Price not found for codice {input_data.codice}, using input data only")
-            except Exception as e:
-                logger.warning(f"Error looking up price: {e}")
-
         with self.suspend_refresh():
             try:
-                # Find insertion point (after last voce)
+                # Find insertion point (before totals row)
                 insert_row = self._find_insertion_point()
 
-                # Get template from S5 sheet
+                # Get template from S5 sheet (rows 9-12, columns A-AQ)
                 s5_sheet = self.get_sheet(self.SHEET_S5)
                 template_range = s5_sheet.getCellRangeByPosition(0, 8, 42, 11)
 
-                # Insert rows and copy template
+                # Insert 4 rows and copy template
                 self.insert_rows(self._sheet, insert_row, 4)
                 self.copy_range(s5_sheet, template_range, self._sheet, insert_row)
 
-                # Determine values to use (input > price lookup > empty)
-                descrizione = input_data.descrizione
-                unita_misura = input_data.unita_misura
-                prezzo_unitario = input_data.prezzo_unitario
-
-                if prezzo_data:
-                    if not descrizione:
-                        descrizione = prezzo_data.descrizione
-                    if not unita_misura:
-                        unita_misura = prezzo_data.unita_misura
-                    if prezzo_unitario is None:
-                        prezzo_unitario = prezzo_data.prezzo_unitario
-
-                # Set voce data
+                # Set the codice articolo (column B, row +1)
+                # This is the "primary key" - VLOOKUP formulas use this to fetch all other data
                 self.set_cell_value(self._sheet, 1, insert_row + 1, input_data.codice)
 
-                if descrizione:
-                    self.set_cell_value(self._sheet, 2, insert_row + 1, descrizione)
+                # Regenerate formulas in the voce to reference correct rows
+                # The template formulas need row numbers updated after copy
+                self._regenerate_voce_formulas(insert_row)
 
-                if unita_misura:
-                    self.set_cell_value(self._sheet, 8, insert_row + 3, f"[{unita_misura}]")
+                # If quantity is provided, add it as a measurement row
+                if input_data.quantita and input_data.quantita > 0:
+                    # Set quantity in measurement row (row +2, column J=9)
+                    self.set_cell_value(self._sheet, 9, insert_row + 2, input_data.quantita)
 
-                if prezzo_unitario is not None:
-                    self.set_cell_value(self._sheet, 11, insert_row + 3, prezzo_unitario)
+                # If user explicitly provided descrizione (override formula), set it
+                if input_data.descrizione:
+                    self.set_cell_value(self._sheet, 2, insert_row + 1, input_data.descrizione)
 
-                if input_data.quantita:
-                    self.set_cell_value(self._sheet, 9, insert_row + 3, input_data.quantita)
-
-                # Generate voce ID
-                voce_id = f"V{len(self.list_voci()):03d}"
+                # If user explicitly provided prezzo_unitario (override formula), set it
+                if input_data.prezzo_unitario is not None:
+                    self.set_cell_value(self._sheet, 11, insert_row + 3, input_data.prezzo_unitario)
 
                 # Renumber voci
                 self._numera_voci()
 
+                # Generate voce ID
+                voci_count = self._count_voci()
+                voce_id = f"V{voci_count:03d}"
+
                 # Parse and return created voce
-                voce = self._parse_voce_at_row(insert_row, 0, None)
+                voce = self._parse_voce_at_row(insert_row, voci_count, None)
                 if voce:
                     voce.voce_id = voce_id
                     return voce
@@ -204,6 +186,80 @@ class ComputoWrapper(LeenoWrapper):
             except Exception as e:
                 logger.error(f"Error adding voce: {e}")
                 raise OperationError("add_voce", str(e))
+
+    def _regenerate_voce_formulas(self, start_row: int) -> None:
+        """
+        Regenerate VLOOKUP formulas for a voce after template copy.
+
+        Sets up the formulas to correctly reference the codice cell and
+        calculate importo, sicurezza, manodopera.
+
+        Args:
+            start_row: First row of the voce (Comp Start Attributo row)
+        """
+        # Row references (1-indexed for formulas)
+        article_row = start_row + 2  # Row with codice (0-indexed: start_row + 1)
+        end_row = start_row + 4  # Row with totals (0-indexed: start_row + 3)
+        measure_row = start_row + 3  # Measurement row (0-indexed: start_row + 2)
+
+        # Column B in article row contains the codice
+        codice_cell = f"$B${article_row}"
+
+        # Set VLOOKUP formulas on the END row (totals row, 0-indexed: start_row + 3)
+
+        # Column C (2): Descrizione - concatenated from elenco_prezzi
+        desc_formula = f'=CONCATENATE(" ";VLOOKUP({codice_cell};elenco_prezzi;2;FALSE());" ")'
+        self.get_cell(self._sheet, 2, start_row + 1).Formula = desc_formula
+
+        # Column I (8): Unità misura with "SOMMANO" prefix
+        um_formula = f'=CONCATENATE("SOMMANO [";VLOOKUP({codice_cell};elenco_prezzi;3;FALSE());"]")'
+        self.get_cell(self._sheet, 8, start_row + 3).Formula = um_formula
+
+        # Column J (9): Quantità totale - SUM of measurement rows
+        qty_formula = f'=SUM(J{measure_row}:J{measure_row})'
+        self.get_cell(self._sheet, 9, start_row + 3).Formula = qty_formula
+
+        # Column L (11): Prezzo unitario from elenco_prezzi
+        price_formula = f'=VLOOKUP({codice_cell};elenco_prezzi;5;FALSE())'
+        self.get_cell(self._sheet, 11, start_row + 3).Formula = price_formula
+
+        # Column S (18): Importo = Quantità * Prezzo (handles % unit)
+        importo_formula = (
+            f'=IF(VLOOKUP({codice_cell};elenco_prezzi;3;FALSE())="%";'
+            f'J{end_row}*L{end_row}/100;J{end_row}*L{end_row})'
+        )
+        self.get_cell(self._sheet, 18, start_row + 3).Formula = importo_formula
+
+        # Column AB (27): % Sicurezza from elenco_prezzi
+        sic_pct_formula = f'=VLOOKUP({codice_cell};elenco_prezzi;4;FALSE())'
+        self.get_cell(self._sheet, 27, start_row + 3).Formula = sic_pct_formula
+
+        # Column R (17): Sicurezza = %Sicurezza * Quantità
+        sic_formula = f'=AB{end_row}*J{end_row}'
+        self.get_cell(self._sheet, 17, start_row + 3).Formula = sic_formula
+
+        # Column AD (29): % Manodopera from elenco_prezzi
+        mdo_pct_formula = f'=VLOOKUP({codice_cell};elenco_prezzi;6;FALSE())'
+        self.get_cell(self._sheet, 29, start_row + 3).Formula = mdo_pct_formula
+
+        # Column AE (30): Manodopera = %Manodopera * Importo
+        mdo_formula = f'=IF(AD{end_row}<>"";PRODUCT(AD{end_row}*S{end_row}))'
+        self.get_cell(self._sheet, 30, start_row + 3).Formula = mdo_formula
+
+        # Column AJ (35): Reference to codice
+        self.get_cell(self._sheet, 35, start_row + 3).Formula = f'={codice_cell}'
+
+    def _count_voci(self) -> int:
+        """Count total voci in computo."""
+        count = 0
+        last_row = self.get_last_row(self._sheet)
+
+        for row in range(4, last_row + 1):
+            style = self.get_cell_style(self._sheet, 0, row)
+            if style == self.STYLE_VOCE_START:
+                count += 1
+
+        return count
 
     def delete_voce(self, voce_id: str) -> bool:
         """

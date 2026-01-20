@@ -232,7 +232,7 @@ class DocumentWrapper(LeenoWrapper):
         last_row = self.get_last_row(sheet)
         for row in range(4, last_row + 1):
             style = self.get_cell_style(sheet, 0, row)
-            if style == self.STYLE_EP_CODE:
+            if style in self.EP_CODE_STYLES:
                 count += 1
         return count
 

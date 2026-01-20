@@ -161,6 +161,8 @@ class LeenoWrapper:
     STYLE_VOCE_END = "Comp End Attributo"
     STYLE_VOCE_PROGRESS = "comp progress"
     STYLE_EP_CODE = "EP-Cs"
+    STYLE_EP_CODE_ALT = "EP-aS"  # Alternative style used in some EP sheets
+    EP_CODE_STYLES = ("EP-Cs", "EP-aS")  # All valid EP code styles
 
     def __init__(self, document: DocumentInfo):
         """
