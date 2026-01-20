@@ -34,127 +34,203 @@ Questo server MCP permette a un agente AI (come Claude) di gestire documenti di 
 - Esportare in PDF
 - Esportare in CSV
 - Esportare in Excel (XLSX)
+- Esportare in XPWE (formato LeenO)
 
 ## Requisiti
 
-- Python 3.10+
-- LibreOffice 7.0+
-- LeenO extension installata in LibreOffice
+- **LibreOffice 7.0+** con estensione LeenO installata
+- **Python 3.10+** (incluso in LibreOffice)
+- **mcp** e **pydantic** (pacchetti Python)
+
+> **Nota Windows**: È necessario usare il Python incluso in LibreOffice per accedere all'API UNO. Il percorso tipico è:
+> `C:\Program Files\LibreOffice\program\python.exe`
 
 ## Installazione
 
+### 1. Clona il repository
+
 ```bash
-# Clona il repository
+git clone https://github.com/mikibart/leeno-mcp-server.git
 cd leeno-mcp-server
+```
 
-# Installa le dipendenze
-pip install -e .
+### 2. Installa le dipendenze nel Python di LibreOffice
 
-# Oppure con pip
-pip install leeno-mcp
+**Windows:**
+```batch
+"C:\Program Files\LibreOffice\program\python.exe" -m pip install mcp pydantic
+```
+
+**Linux:**
+```bash
+# Il percorso può variare in base alla distribuzione
+/usr/lib/libreoffice/program/python -m pip install mcp pydantic
+```
+
+**macOS:**
+```bash
+/Applications/LibreOffice.app/Contents/Resources/python -m pip install mcp pydantic
+```
+
+### 3. Installa il pacchetto (opzionale)
+
+```bash
+# Con il Python di LibreOffice
+"C:\Program Files\LibreOffice\program\python.exe" -m pip install -e .
 ```
 
 ## Utilizzo
 
-### 1. Avvia LibreOffice in modalità headless
+### Passo 1: Avvia LibreOffice in modalità headless
+
+LibreOffice deve essere avviato con il listener socket abilitato.
+
+**Windows (PowerShell):**
+```powershell
+Start-Process "C:\Program Files\LibreOffice\program\soffice.exe" -ArgumentList '--headless', '--accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext"'
+```
+
+**Windows (CMD):**
+```batch
+start "" "C:\Program Files\LibreOffice\program\soffice.exe" --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext"
+```
+
+**Linux/macOS:**
+```bash
+soffice --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext" &
+```
+
+> **Verifica**: LibreOffice è pronto quando i processi `soffice.exe` e `soffice.bin` sono in esecuzione.
+
+### Passo 2: Avvia il server MCP
 
 **Windows:**
 ```batch
-scripts\start_libreoffice.bat
+"C:\Program Files\LibreOffice\program\python.exe" -m leeno_mcp.server
 ```
 
-**Linux/Mac:**
+**Linux/macOS:**
 ```bash
-chmod +x scripts/start_libreoffice.sh
-./scripts/start_libreoffice.sh
+/path/to/libreoffice/python -m leeno_mcp.server
 ```
 
-Oppure manualmente:
-```bash
-soffice --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext"
-```
+### Passo 3: Configura il client MCP
 
-### 2. Avvia il server MCP
+#### Claude Desktop
 
-```bash
-leeno-mcp
-```
+Aggiungi al file `claude_desktop_config.json`:
 
-### 3. Configura il tuo client MCP
-
-Aggiungi al file di configurazione del tuo client MCP:
-
+**Windows** (`%APPDATA%\Claude\claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
     "leeno": {
-      "command": "leeno-mcp"
+      "command": "C:\\Program Files\\LibreOffice\\program\\python.exe",
+      "args": ["-m", "leeno_mcp.server"],
+      "env": {
+        "PYTHONPATH": "C:\\path\\to\\leeno-mcp-server\\src"
+      }
     }
   }
 }
 ```
 
-## Tool Disponibili
+**macOS** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "leeno": {
+      "command": "/Applications/LibreOffice.app/Contents/Resources/python",
+      "args": ["-m", "leeno_mcp.server"],
+      "env": {
+        "PYTHONPATH": "/path/to/leeno-mcp-server/src"
+      }
+    }
+  }
+}
+```
 
-### Documenti
+#### Claude Code
+
+Aggiungi al file `.claude/settings.json` nella home o nel progetto:
+```json
+{
+  "mcpServers": {
+    "leeno": {
+      "command": "C:\\Program Files\\LibreOffice\\program\\python.exe",
+      "args": ["-m", "leeno_mcp.server"],
+      "env": {
+        "PYTHONPATH": "C:\\path\\to\\leeno-mcp-server\\src"
+      }
+    }
+  }
+}
+```
+
+## Tool Disponibili (32 totali)
+
+### Documenti (6 tools)
 | Tool | Descrizione |
 |------|-------------|
-| `leeno_document_create` | Crea nuovo documento |
+| `leeno_document_create` | Crea nuovo documento da template |
 | `leeno_document_open` | Apre documento esistente |
 | `leeno_document_save` | Salva documento |
 | `leeno_document_close` | Chiude documento |
 | `leeno_document_list` | Lista documenti aperti |
-| `leeno_document_info` | Info e statistiche |
+| `leeno_document_info` | Info e statistiche documento |
 
-### Computo
+### Computo (8 tools)
 | Tool | Descrizione |
 |------|-------------|
-| `leeno_computo_add_voce` | Aggiunge voce |
-| `leeno_computo_list_voci` | Lista voci |
-| `leeno_computo_get_voce` | Dettaglio voce |
+| `leeno_computo_add_voce` | Aggiunge voce di computo |
+| `leeno_computo_list_voci` | Lista voci del computo |
+| `leeno_computo_get_voce` | Dettaglio singola voce |
 | `leeno_computo_delete_voce` | Elimina voce |
-| `leeno_computo_add_capitolo` | Aggiunge capitolo |
-| `leeno_computo_add_misura` | Aggiunge misura |
+| `leeno_computo_add_capitolo` | Aggiunge capitolo/sottocapitolo |
+| `leeno_computo_add_misura` | Aggiunge riga di misurazione |
 | `leeno_computo_get_totale` | Totale computo |
-| `leeno_computo_get_struttura` | Struttura completa |
+| `leeno_computo_get_struttura` | Struttura capitoli e voci |
 
-### Prezzi
+### Prezzi (7 tools)
 | Tool | Descrizione |
 |------|-------------|
-| `leeno_prezzi_search` | Cerca prezzi |
-| `leeno_prezzi_get` | Dettaglio prezzo |
-| `leeno_prezzi_add` | Aggiunge prezzo |
-| `leeno_prezzi_edit` | Modifica prezzo |
+| `leeno_prezzi_search` | Cerca prezzi per testo |
+| `leeno_prezzi_get` | Dettaglio prezzo per codice |
+| `leeno_prezzi_add` | Aggiunge nuovo prezzo |
+| `leeno_prezzi_edit` | Modifica prezzo esistente |
 | `leeno_prezzi_delete` | Elimina prezzo |
-| `leeno_prezzi_list` | Lista prezzi |
-| `leeno_prezzi_count` | Conta prezzi |
+| `leeno_prezzi_list` | Lista tutti i prezzi |
+| `leeno_prezzi_count` | Conta prezzi in elenco |
 
-### Contabilità
+### Contabilità (6 tools)
 | Tool | Descrizione |
 |------|-------------|
-| `leeno_contab_add_voce` | Aggiunge voce |
-| `leeno_contab_list_voci` | Lista voci |
-| `leeno_contab_get_sal` | Info SAL |
-| `leeno_contab_get_stato` | Stato contabilità |
+| `leeno_contab_add_voce` | Aggiunge voce di contabilità |
+| `leeno_contab_list_voci` | Lista voci contabilità |
+| `leeno_contab_get_sal` | Info su SAL specifico |
+| `leeno_contab_get_stato` | Stato generale contabilità |
+| `leeno_contab_emetti_sal` | Emette nuovo SAL |
+| `leeno_contab_annulla_sal` | Annulla ultimo SAL |
 
-### Export
+### Export (5 tools)
 | Tool | Descrizione |
 |------|-------------|
-| `leeno_export_pdf` | Esporta PDF |
-| `leeno_export_csv` | Esporta CSV |
-| `leeno_export_xlsx` | Esporta Excel |
-| `leeno_export_formats` | Formati disponibili |
+| `leeno_export_pdf` | Esporta in PDF |
+| `leeno_export_csv` | Esporta in CSV |
+| `leeno_export_xlsx` | Esporta in Excel |
+| `leeno_export_xpwe` | Esporta in XPWE (LeenO) |
+| `leeno_export_formats` | Lista formati disponibili |
 
 ## Configurazione
 
-Variabili d'ambiente:
+Variabili d'ambiente opzionali:
 
 | Variabile | Descrizione | Default |
 |-----------|-------------|---------|
-| `LEENO_UNO_HOST` | Host LibreOffice | localhost |
-| `LEENO_UNO_PORT` | Porta LibreOffice | 2002 |
-| `LEENO_PATH` | Percorso estensione LeenO | auto-detect |
-| `LEENO_LOG_LEVEL` | Livello log | INFO |
+| `LEENO_UNO_HOST` | Host LibreOffice | `localhost` |
+| `LEENO_UNO_PORT` | Porta LibreOffice | `2002` |
+| `LEENO_TEMPLATE_PATH` | Percorso template LeenO | auto-detect |
+| `LEENO_LOG_LEVEL` | Livello log (DEBUG/INFO/WARNING/ERROR) | `INFO` |
 
 ## Esempio di utilizzo
 
@@ -188,14 +264,76 @@ AI: [Chiama leeno_computo_get_totale]
     Totale computo: € 1,250.00
     Sicurezza: € 37.50
     Manodopera: € 375.00
+
+User: Esporta in PDF
+
+AI: [Chiama leeno_export_pdf con output_path="computo.pdf"]
+    PDF esportato: computo.pdf
+```
+
+## Troubleshooting
+
+### Errore "Connection refused"
+
+LibreOffice non è in ascolto sulla porta 2002:
+1. Verifica che LibreOffice sia avviato con `--accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext"`
+2. Controlla che i processi `soffice.exe` e `soffice.bin` siano attivi
+3. Attendi qualche secondo dopo l'avvio prima di connetterti
+
+### Errore "UNO module not available"
+
+Stai usando il Python di sistema invece di quello di LibreOffice:
+- **Windows**: Usa `"C:\Program Files\LibreOffice\program\python.exe"`
+- **Linux**: Usa il Python nella cartella di LibreOffice
+- **macOS**: Usa `/Applications/LibreOffice.app/Contents/Resources/python`
+
+### Errore "Module use of python311.dll conflicts"
+
+Conflitto tra versioni Python. Assicurati di usare esclusivamente il Python di LibreOffice per tutto (installazione dipendenze ed esecuzione server).
+
+### Il documento non viene riconosciuto come LeenO
+
+Il documento deve contenere i fogli standard di LeenO:
+- `COMPUTO` - Foglio computo metrico
+- `Elenco Prezzi` - Elenco prezzi
+- `S2` - Foglio di sistema LeenO
+
+## Sviluppo
+
+### Eseguire i test
+
+```bash
+# Installa dipendenze di sviluppo
+"C:\Program Files\LibreOffice\program\python.exe" -m pip install pytest pytest-asyncio
+
+# Esegui i test
+cd leeno-mcp-server
+"C:\Program Files\LibreOffice\program\python.exe" -m pytest tests/ -v
+```
+
+### Struttura del progetto
+
+```
+leeno-mcp-server/
+├── src/leeno_mcp/
+│   ├── connection/      # Connessione UNO e pool documenti
+│   ├── models/          # Modelli Pydantic
+│   ├── wrappers/        # Wrapper per operazioni LeenO
+│   ├── tools/           # Tool MCP
+│   ├── utils/           # Utilità ed eccezioni
+│   ├── config.py        # Configurazione
+│   └── server.py        # Entry point server
+├── tests/               # Test suite (112 test)
+└── pyproject.toml       # Configurazione progetto
 ```
 
 ## Licenza
 
-MIT License
+MIT License - Vedi [LICENSE](LICENSE)
 
 ## Link Utili
 
 - [LeenO](https://leeno.org) - Estensione per LibreOffice
-- [Telegram LeenO](https://t.me/leeno_computometrico) - Supporto
+- [Telegram LeenO](https://t.me/leeno_computometrico) - Supporto comunità
 - [MCP Protocol](https://modelcontextprotocol.io/) - Model Context Protocol
+- [GitHub Repository](https://github.com/mikibart/leeno-mcp-server)
