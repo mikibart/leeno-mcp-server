@@ -7,6 +7,9 @@ from .elenco_prezzi import ElencoPrezziWrapper
 from .contabilita import ContabilitaWrapper
 from .export import ExportWrapper
 from .analisi import AnalisiWrapper, AnalisiPrezzo, AnalisiInput, ComponenteAnalisi
+from .import_prezzi import ImportPrezziWrapper, ImportResult, IMPORT_FORMATS
+from .varianti import VariantiWrapper, VarianteInfo
+from .giornale import GiornaleWrapper, GiornaleInfo, GiornoLavori
 
 __all__ = [
     "LeenoWrapper",
@@ -22,4 +25,12 @@ __all__ = [
     "AnalisiPrezzo",
     "AnalisiInput",
     "ComponenteAnalisi",
+    "ImportPrezziWrapper",
+    "ImportResult",
+    "IMPORT_FORMATS",
+    "VariantiWrapper",
+    "VarianteInfo",
+    "GiornaleWrapper",
+    "GiornaleInfo",
+    "GiornoLavori",
 ]

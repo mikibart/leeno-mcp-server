@@ -20,6 +20,10 @@ from .tools import (
     register_elenco_prezzi_tools,
     register_contabilita_tools,
     register_export_tools,
+    register_analisi_tools,
+    register_import_tools,
+    register_varianti_tools,
+    register_giornale_tools,
 )
 
 # Configure logging
@@ -43,6 +47,10 @@ def create_server() -> FastMCP:
     register_elenco_prezzi_tools(server)
     register_contabilita_tools(server)
     register_export_tools(server)
+    register_analisi_tools(server)
+    register_import_tools(server)
+    register_varianti_tools(server)
+    register_giornale_tools(server)
 
     logger.info(f"LeenO MCP Server {config.version} initialized")
 

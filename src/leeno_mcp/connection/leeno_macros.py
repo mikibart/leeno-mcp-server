@@ -16,14 +16,92 @@ Usage:
 """
 
 import sys
+import os
 import logging
 from typing import Any, Optional, Tuple, List
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Path to LeenO Python modules
-LEENO_PYTHONPATH = r"C:\Users\mikib\OneDrive\Desktop\leeno\LeenO\python\pythonpath"
+
+def _find_leeno_pythonpath() -> Optional[str]:
+    """
+    Auto-detect LeenO pythonpath location.
+
+    Search order:
+    1. LEENO_PYTHONPATH environment variable
+    2. LEENO_PATH environment variable + /python/pythonpath
+    3. LibreOffice user extensions (Windows/Linux/Mac)
+    4. Project sibling folder (development)
+    5. Common installation paths
+
+    Returns:
+        Path to LeenO pythonpath or None if not found
+    """
+    # 1. Direct environment variable
+    if env_path := os.environ.get("LEENO_PYTHONPATH"):
+        if os.path.exists(env_path):
+            return env_path
+
+    # 2. LEENO_PATH + /python/pythonpath
+    if leeno_path := os.environ.get("LEENO_PATH"):
+        pythonpath = os.path.join(leeno_path, "python", "pythonpath")
+        if os.path.exists(pythonpath):
+            return pythonpath
+
+    # 3. LibreOffice user extensions
+    appdata_paths = []
+
+    # Windows
+    if os.name == 'nt':
+        appdata = os.environ.get("APPDATA", "")
+        if appdata:
+            appdata_paths.append(Path(appdata) / "LibreOffice" / "4" / "user" / "uno_packages" / "cache" / "uno_packages")
+
+    # Linux
+    appdata_paths.append(Path.home() / ".config" / "libreoffice" / "4" / "user" / "uno_packages" / "cache" / "uno_packages")
+
+    # macOS
+    appdata_paths.append(Path.home() / "Library" / "Application Support" / "LibreOffice" / "4" / "user" / "uno_packages" / "cache" / "uno_packages")
+
+    for appdata_path in appdata_paths:
+        if appdata_path.exists():
+            for entry in appdata_path.iterdir():
+                if entry.is_dir():
+                    # Look for LeenO extension
+                    for ext_dir in entry.iterdir():
+                        if ext_dir.is_dir() and "leeno" in ext_dir.name.lower():
+                            pythonpath = ext_dir / "python" / "pythonpath"
+                            if pythonpath.exists():
+                                return str(pythonpath)
+
+    # 4. Project sibling folder (development setup)
+    project_root = Path(__file__).parent.parent.parent.parent.parent  # leeno-mcp-server/../
+    dev_paths = [
+        project_root / "LeenO" / "python" / "pythonpath",
+        project_root.parent / "LeenO" / "python" / "pythonpath",
+    ]
+
+    for dev_path in dev_paths:
+        if dev_path.exists() and (dev_path / "pyleeno.py").exists():
+            return str(dev_path)
+
+    # 5. Common system paths
+    system_paths = [
+        Path("/usr/share/libreoffice/share/Scripts/python/LeenO/python/pythonpath"),
+        Path("/opt/libreoffice/share/Scripts/python/LeenO/python/pythonpath"),
+        Path("C:/Program Files/LibreOffice/share/Scripts/python/LeenO/python/pythonpath"),
+    ]
+
+    for sys_path in system_paths:
+        if sys_path.exists():
+            return str(sys_path)
+
+    return None
+
+
+# Auto-detect LeenO pythonpath
+LEENO_PYTHONPATH = _find_leeno_pythonpath()
 
 
 class LeenoMacros:
@@ -62,6 +140,10 @@ class LeenoMacros:
 
     def _setup_pythonpath(self) -> None:
         """Add LeenO pythonpath to sys.path if not present."""
+        if LEENO_PYTHONPATH is None:
+            logger.warning("LeenO pythonpath not found. Set LEENO_PYTHONPATH or LEENO_PATH environment variable.")
+            return
+
         if LEENO_PYTHONPATH not in sys.path:
             sys.path.insert(0, LEENO_PYTHONPATH)
             logger.info(f"Added LeenO pythonpath: {LEENO_PYTHONPATH}")
