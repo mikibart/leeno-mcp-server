@@ -94,8 +94,6 @@ class TestServerCreation:
 
     def test_create_server(self, mock_uno_module):
         """Test server creation with all tools registered."""
-        from unittest.mock import patch
-
         with patch('leeno_mcp.server.FastMCP') as MockFastMCP:
             mock_server_instance = MagicMock()
             mock_server_instance.tool = MagicMock(return_value=lambda f: f)
@@ -103,7 +101,7 @@ class TestServerCreation:
 
             from leeno_mcp.server import create_server
 
-            server = create_server()
+            create_server()
 
             # Verify FastMCP was created
             MockFastMCP.assert_called_once()
@@ -124,7 +122,7 @@ class TestToolHelpers:
         pool._initialized = True
 
         # Add a document
-        info = pool.add(leeno_document, doc_id="test_doc")
+        pool.add(leeno_document, doc_id="test_doc")
 
         # Verify we can retrieve it
         retrieved = pool.get("test_doc")

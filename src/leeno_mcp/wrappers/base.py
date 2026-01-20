@@ -225,7 +225,7 @@ class LeenoWrapper:
             return sheets.getByName(name)
         except SheetNotFoundError:
             raise
-        except Exception as e:
+        except Exception:
             raise SheetNotFoundError(name)
 
     def get_sheet_names(self) -> List[str]:

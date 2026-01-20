@@ -47,7 +47,7 @@ def register_contabilita_tools(server: FastMCP):
             try:
                 entry_date = date.fromisoformat(data)
             except ValueError:
-                return [TextContent(type="text", text=f"Error: Invalid date format. Use YYYY-MM-DD.")]
+                return [TextContent(type="text", text="Error: Invalid date format. Use YYYY-MM-DD.")]
 
             input_data = VoceContabilitaInput(
                 codice=codice,
@@ -93,7 +93,7 @@ def register_contabilita_tools(server: FastMCP):
             voci = wrapper.list_voci(sal)
 
             if not voci:
-                msg = f"No entries found in contabilità"
+                msg = "No entries found in contabilità"
                 if sal:
                     msg += f" for SAL {sal}"
                 return [TextContent(type="text", text=msg + ".")]

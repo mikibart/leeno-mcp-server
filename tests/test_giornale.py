@@ -194,11 +194,7 @@ class TestListGiorni:
 
     def test_list_giorni_returns_list(self):
         """Test list_giorni returns list."""
-        from leeno_mcp.wrappers.giornale import GiornaleWrapper, GiornoLavori
-
-        # Verify return type annotation
-        import inspect
-        sig = inspect.signature(GiornaleWrapper.list_giorni)
+        from leeno_mcp.wrappers.giornale import GiornaleWrapper
 
         # Method exists
         assert hasattr(GiornaleWrapper, 'list_giorni')

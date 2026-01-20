@@ -71,13 +71,13 @@ class VariantiWrapper(LeenoWrapper):
                 if macros.is_initialized:
                     try:
                         import LeenoVariante
-                        oSheet = LeenoVariante.generaVariante(self._uno_doc, clear)
+                        LeenoVariante.generaVariante(self._uno_doc, clear)
                         logger.info(f"Variante created (clear={clear})")
                     except ImportError as e:
                         logger.warning(f"LeenoVariante not available: {e}")
-                        oSheet = self._create_variante_manual(clear)
+                        self._create_variante_manual(clear)
                 else:
-                    oSheet = self._create_variante_manual(clear)
+                    self._create_variante_manual(clear)
 
                 return self.get_variante_info()
 

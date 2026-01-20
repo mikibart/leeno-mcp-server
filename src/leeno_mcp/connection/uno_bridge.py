@@ -80,7 +80,6 @@ class UnoBridge:
         connection_string = self._config.connection_string
         logger.info(f"Connecting to LibreOffice: {connection_string}")
 
-        last_error = None
         for attempt in range(1, self._config.retry_attempts + 1):
             try:
                 # Get local context
@@ -109,14 +108,12 @@ class UnoBridge:
                 return True
 
             except NoConnectException as e:
-                last_error = e
                 logger.warning(
                     f"Connection attempt {attempt}/{self._config.retry_attempts} failed: {e}"
                 )
                 if attempt < self._config.retry_attempts:
                     time.sleep(self._config.retry_delay)
             except Exception as e:
-                last_error = e
                 logger.error(f"Unexpected error connecting to LibreOffice: {e}")
                 break
 

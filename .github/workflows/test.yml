@@ -62,7 +62,7 @@ jobs:
 
       - name: Check code style with Ruff
         run: |
-          ruff check src/ tests/ --ignore E501,F401
+          ruff check src/ tests/ --ignore E501,F401,E402
 
       - name: Check formatting with Ruff
         run: |

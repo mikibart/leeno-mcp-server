@@ -296,8 +296,8 @@ def create_leeno_document() -> MockDocument:
 
     # Add standard LeenO sheets (S2 and COMPUTO required for _check_is_leeno)
     computo = sheets.add_sheet("COMPUTO")
-    variante = sheets.add_sheet("VARIANTE")
-    contabilita = sheets.add_sheet("CONTABILITA")
+    sheets.add_sheet("VARIANTE")
+    sheets.add_sheet("CONTABILITA")
     elenco_prezzi = sheets.add_sheet("Elenco Prezzi")
     sheets.add_sheet("S2")  # Required for LeenO detection
     sheets.add_sheet("S5")  # Template sheet

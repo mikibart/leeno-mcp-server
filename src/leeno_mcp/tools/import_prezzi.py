@@ -91,11 +91,7 @@ def register_import_tools(server: FastMCP):
             Detected format information
         """
         try:
-            # Use a temporary wrapper just for detection
-            from ..connection import get_pool
-            pool = get_pool()
-
-            # Get any open document or create detection without doc
+            # File-based detection, no document needed
             import os
             if not os.path.exists(file_path):
                 return [TextContent(type="text", text=f"Error: File not found: {file_path}")]
